@@ -18,20 +18,22 @@ const logger = {
   "log": function(logData){
     logData["service"] = process.env.APP_NAME;
     var loggerApp = {
-      uri: process.env.LOGGER_APP_URI,
+      uri: ["http://", process.env.KUBE_LOGGER_SERVICE_HOST, ":", process.env.KUBE_LOGGER_SERVICE_PORT, process.env.LOGGER_APP_PATH].join(""),
       body: JSON.stringify(logData),
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       }
     }
+    console.log(new Date().toISOString() + " Publish HTTP POST request to " + ["http://", process.env.KUBE_LOGGER_SERVICE_HOST, ":", process.env.KUBE_LOGGER_SERVICE_PORT, process.env.LOGGER_APP_PATH].join(""));
     request(loggerApp, function(error, response){});
   }
 };
 
 app.post("/db/insert", (req, res) => {
+  console.log(new Date().toISOString() + " " + req.method + " " + req.originalUrl + " invoked");
   logger.log({id: req.body.reqId, method: req.method + " " + req.originalUrl, message: "Connecting to database"});
-  const client = new MongoClient(process.env.DB_URL, { useNewUrlParser: true });
+  const client = new MongoClient(["mongodb://", process.env.MONGODB_SERVICE_HOST, ":", process.env.MONGODB_SERVICE_PORT + "/"].join(""), { useNewUrlParser: true });
   client.connect(async function(err){
     try {
       const db = await client.db(req.body.database);
@@ -63,8 +65,9 @@ app.post("/db/insert", (req, res) => {
 });
 
 app.post("/db/query", (req, res) => {
+  console.log(new Date().toISOString() + " " + req.method + " " + req.originalUrl + " invoked");
   logger.log({id: req.body.reqId, method: req.method + " " + req.originalUrl, message: "Connecting to database"});
-  const client = new MongoClient(process.env.DB_URL, { useNewUrlParser: true });
+  const client = new MongoClient(["mongodb://", process.env.MONGODB_SERVICE_HOST, ":", process.env.MONGODB_SERVICE_PORT + "/"].join(""), { useNewUrlParser: true });
   client.connect(async function(err){
     try {
       const db = await client.db(req.body.database);
@@ -97,8 +100,9 @@ app.post("/db/query", (req, res) => {
 });
 
 app.post("/db/delete", (req, res) => {
+  console.log(new Date().toISOString() + " " + req.method + " " + req.originalUrl + " invoked");
   logger.log({id: req.body.reqId, method: req.method + " " + req.originalUrl, message: "Connecting to database"});
-  const client = new MongoClient(process.env.DB_URL, { useNewUrlParser: true });
+  const client = new MongoClient(["mongodb://", process.env.MONGODB_SERVICE_HOST, ":", process.env.MONGODB_SERVICE_PORT + "/"].join(""), { useNewUrlParser: true });
   client.connect(async function(err){
     try {
       const db = await client.db(req.body.database);
@@ -130,5 +134,6 @@ app.post("/db/delete", (req, res) => {
 });
 
 var server = app.listen(process.env.APP_PORT, function () {
-    console.log("DB Adapter app running on port", server.address().port);
+  console.log(new Date().toISOString() + " " + process.env.APP_NAME + " running on server", server.address());
+  console.log(new Date().toISOString() + " " + process.env.APP_NAME + " running on port", server.address().port);
 });
